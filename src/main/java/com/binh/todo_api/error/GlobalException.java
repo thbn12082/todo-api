@@ -21,4 +21,11 @@ public class GlobalException {
 
         return ResponseEntity.badRequest().body(err);
     }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFoundException(NotFoundException ex, HttpServletRequest request){
+        ApiError err = new ApiError(Instant.now(), 404, "Not Found", request.getRequestURI(), null);
+        return ResponseEntity.status(404).body(err);
+    }
+
 }

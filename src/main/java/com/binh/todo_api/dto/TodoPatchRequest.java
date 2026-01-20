@@ -1,0 +1,51 @@
+package com.binh.todo_api.dto;
+
+import jakarta.validation.constraints.*;
+
+public class TodoPatchRequest {
+    @Size(max = 100, message = "Title must not exceed 100 characters")
+    private String title;
+
+    private boolean completed;
+
+    @Size(max = 200, message = "Description must not exceed 200 characters")
+    private String description;
+
+
+
+    @Min(value = 1, message = "Priority must be at least 1")
+    @Max(value = 5, message = "Priority must be at most 5")
+    private int priority;
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+}
