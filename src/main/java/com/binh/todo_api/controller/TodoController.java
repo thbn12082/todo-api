@@ -2,7 +2,9 @@ package com.binh.todo_api.controller;
 
 import com.binh.todo_api.domain.Todo;
 import com.binh.todo_api.dto.TodoCreateRequest;
+import com.binh.todo_api.dto.TodoPatchRequest;
 import com.binh.todo_api.dto.TodoResponse;
+import com.binh.todo_api.dto.TodoUpdateRequest;
 import com.binh.todo_api.error.ApiError;
 import com.binh.todo_api.service.TodoService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -80,8 +82,22 @@ public class TodoController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id){
-        Todo todo = service.findById(id);
-        service.deleteTodo(id);
-        return ResponseEntity.status(204).body(null);
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TodoResponse> update(@PathVariable long id,@Valid @RequestBody TodoUpdateRequest request){
+        this.service.updatePutTodo(id, request);
+        TodoResponse res = new TodoResponse(String.valueOf(id), request.getTitle(), request.isCompleted(), request.getDescription(), request.getPriority());
+        return ResponseEntity.ok(res);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<TodoResponse> updatePatch(@PathVariable long id, @Valid @RequestBody TodoPatchRequest request){
+        Todo todo = this.service.updatePatch(id, request);
+        TodoResponse res = new TodoResponse(String.valueOf(id), todo.getTitle(), todo.isCompleted(), todo.getDescrption(), todo.getPriority());
+        return ResponseEntity.ok(res);
+
     }
 }

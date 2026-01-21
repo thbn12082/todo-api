@@ -17,15 +17,22 @@ public class GlobalException {
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request){
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(err -> fieldErrors.put(err.getField(), err.getDefaultMessage()));
-        ApiError err = new ApiError(Instant.now(), 400, "Valid Failed", request.getRequestURI(), fieldErrors);
+        ApiError err = new ApiError(Instant.now(), 400, ex.getMessage(), request.getRequestURI(), fieldErrors);
 
         return ResponseEntity.badRequest().body(err);
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiError> handleNotFoundException(NotFoundException ex, HttpServletRequest request){
-        ApiError err = new ApiError(Instant.now(), 404, "Not Found", request.getRequestURI(), null);
+        ApiError err = new ApiError(Instant.now(), 404, ex.getMessage(), request.getRequestURI(), null);
         return ResponseEntity.status(404).body(err);
+    }
+
+    @ExceptionHandler(ConflicException.class)
+    public ResponseEntity<ApiError> handleConflicException(ConflicException ex, HttpServletRequest request){
+        ApiError err = new ApiError(Instant.now(), 409, ex.getMessage(), request.getRequestURI(), null);
+
+        return ResponseEntity.status(409).body(err);
     }
 
 }

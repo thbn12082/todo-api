@@ -15,6 +15,10 @@ public class Todo {
         this.priority = priority;
     }
 
+    public Todo with (String title, boolean completed, String descrption, int priority){
+        return new Todo(this.id, title, completed, descrption, priority);
+    }
+
     public long getId() {
         return id;
     }

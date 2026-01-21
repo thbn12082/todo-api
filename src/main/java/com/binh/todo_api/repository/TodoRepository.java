@@ -17,8 +17,13 @@ public class TodoRepository {
         return Optional.ofNullable(storage.get(id));
     }
 
-    public void save(Todo todo){
+    public Todo save(Todo todo){
         storage.put(todo.getId(), todo);
+        return todo;
+    }
+
+    public boolean exitsById(Long id){
+        return storage.containsKey(id);
     }
 
     public void delete(Long id){
