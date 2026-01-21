@@ -5,6 +5,7 @@ import com.binh.todo_api.dto.TodoCreateRequest;
 import com.binh.todo_api.dto.TodoPatchRequest;
 import com.binh.todo_api.dto.TodoResponse;
 import com.binh.todo_api.dto.TodoUpdateRequest;
+import com.binh.todo_api.entity.TodoEntity;
 import com.binh.todo_api.error.ApiError;
 import com.binh.todo_api.service.TodoService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,14 +49,14 @@ public class TodoController {
 
     @GetMapping
     public ResponseEntity<List<TodoResponse>> lst(){
-        List<Todo> todos = service.findAll();
+        List<TodoEntity> todos = service.findAll();
         List<TodoResponse> response = new ArrayList<>();
         todos.forEach(i ->{
             TodoResponse todoResponse = new TodoResponse(
                     String.valueOf(i.getId()),
                     i.getTitle(),
                     i.isCompleted(),
-                    i.getDescrption(),
+                    i.getDescription(),
                     i.getPriority()
             );
             response.add(todoResponse);
@@ -65,12 +66,12 @@ public class TodoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TodoResponse> getById(@PathVariable("id") long id){
-        Todo todo = service.findById(id);
+        TodoEntity todo = service.findById(id);
         TodoResponse response = new TodoResponse(
                 String.valueOf(todo.getId()),
                 todo.getTitle(),
                 todo.isCompleted(),
-                todo.getDescrption(),
+                todo.getDescription(),
                 todo.getPriority());
         return ResponseEntity.ok(response);
     }
@@ -95,9 +96,15 @@ public class TodoController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<TodoResponse> updatePatch(@PathVariable long id, @Valid @RequestBody TodoPatchRequest request){
-        Todo todo = this.service.updatePatch(id, request);
-        TodoResponse res = new TodoResponse(String.valueOf(id), todo.getTitle(), todo.isCompleted(), todo.getDescrption(), todo.getPriority());
+        TodoEntity todo = this.service.updatePatch(id, request);
+        TodoResponse res = new TodoResponse(String.valueOf(id), todo.getTitle(), todo.isCompleted(), todo.getDescription(), todo.getPriority());
         return ResponseEntity.ok(res);
 
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAll(){
+        service.deleteAll();
+        return ResponseEntity.noContent().build();
     }
 }

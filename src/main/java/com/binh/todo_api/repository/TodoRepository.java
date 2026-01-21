@@ -26,6 +26,9 @@ public class TodoRepository {
         return storage.containsKey(id);
     }
 
+    public void deleteAll(){
+        storage.clear();
+    }
     public void delete(Long id){
         storage.remove(id);
     }
