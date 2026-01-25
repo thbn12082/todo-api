@@ -18,11 +18,11 @@ public class TodoEntity {
     @Column(nullable = false)
     private int priority;
 
-    public TodoEntity() {
+    protected TodoEntity() {
     }
 
-    public TodoEntity(long id, String title, boolean completed, String description, int priority) {
-        this.id = id;
+    public TodoEntity(String title, boolean completed, String description, int priority) {
+
         this.title = title;
         this.completed = completed;
         this.description = description;
@@ -30,7 +30,7 @@ public class TodoEntity {
     }
 
     public TodoEntity with (String title, boolean completed, String description, int priority){
-        return new TodoEntity(this.id, title, completed, description, priority);
+        return new TodoEntity(title, completed, description, priority);
     }
 
     public long getId() {

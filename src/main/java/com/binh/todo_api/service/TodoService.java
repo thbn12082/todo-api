@@ -9,8 +9,11 @@ import com.binh.todo_api.error.ConflicException;
 import com.binh.todo_api.error.NotFoundException;
 import com.binh.todo_api.repository.TodoJpaRepository;
 import com.binh.todo_api.repository.TodoRepository;
+import com.binh.todo_api.spec.TodoSpecifications;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,7 +21,6 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class TodoService {
     private final TodoJpaRepository todoRepository;
-    private final AtomicLong seq = new AtomicLong(0);
     public TodoService(TodoJpaRepository todoRepository) {
         this.todoRepository = todoRepository;
     }
@@ -30,9 +32,8 @@ public class TodoService {
                 new NotFoundException("Todo not found: " + id)
         );}
     public TodoEntity createTodo(TodoCreateRequest request){
-        Long id = seq.incrementAndGet();
         Optional<String> description = Optional.ofNullable(request.getDescription());
-        TodoEntity todo = new TodoEntity(id, request.getTitle(), request.isCompleted(), description.orElse(""), request.getPriority());
+        TodoEntity todo = new TodoEntity(request.getTitle(), request.isCompleted(), description.orElse(""), request.getPriority());
         todoRepository.save(todo);
         return todo;
     }
@@ -81,7 +82,16 @@ public class TodoService {
         }else{
             throw new NotFoundException("Todo not found: " + id);
         }
-
     }
+
+    public Page<TodoEntity> list(Boolean completed, String title,Integer minPriority, Integer maxPriority,String prefix, Pageable pageable){
+        Specification<TodoEntity> spec = Specification.where(TodoSpecifications.titleContains(title))
+                .or(TodoSpecifications.hasCompleted(completed)).or(TodoSpecifications.priorityRange(minPriority, maxPriority)).or(TodoSpecifications.startWithTitle(prefix));
+        return todoRepository.findAll(spec, pageable);
+    }
+
+
+
+
 }
 
