@@ -86,7 +86,7 @@ public class TodoService {
 
     public Page<TodoEntity> list(Boolean completed, String title,Integer minPriority, Integer maxPriority,String prefix, Pageable pageable){
         Specification<TodoEntity> spec = Specification.where(TodoSpecifications.titleContains(title))
-                .or(TodoSpecifications.hasCompleted(completed)).or(TodoSpecifications.priorityRange(minPriority, maxPriority)).or(TodoSpecifications.startWithTitle(prefix));
+                .and(TodoSpecifications.hasCompleted(completed)).and(TodoSpecifications.priorityRange(minPriority, maxPriority)).and(TodoSpecifications.startWithTitle(prefix));
         return todoRepository.findAll(spec, pageable);
     }
 
