@@ -70,7 +70,6 @@ public class TodoController {
                 todo.getPriority());
         return ResponseEntity.ok(response);
     }
-
     @GetMapping("/health")
     public Map<String, String> health(){
         return Map.of("status", "OK");

@@ -12,7 +12,7 @@ public class TodoSpecifications {
     // lọc theo tên
     public static Specification<TodoEntity> titleContains(String title){
         return (root, query, cb) -> {
-            if(title == null || title.isBlank()) return null;
+            if(title == null || title.isBlank()) return cb.conjunction();
             return cb.like(cb.lower(root.get("title")), "%" + title.trim().toLowerCase() + "%");
         };
     }
@@ -33,13 +33,16 @@ public class TodoSpecifications {
             } else if (maxPriority != null) {
                 return cb.lessThanOrEqualTo(root.get("priority"), maxPriority);
             } else {
-                return null;
+                return cb.conjunction();
             }
         };
     }
 
     public static Specification<TodoEntity> startWithTitle(String prefix){
-        return (root, query, cb) -> cb.like(cb.lower(root.get("title")), prefix.toLowerCase() + "%");
+        if(prefix != null && !prefix.isBlank()){
+            return (root, query, cb) -> cb.like(cb.lower(root.get("title")), prefix.toLowerCase() + "%");
+        }
+        return (root,query, cb) -> cb.conjunction();
     }
 
 

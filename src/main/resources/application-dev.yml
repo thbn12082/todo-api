@@ -4,11 +4,16 @@ spring:
     username: todo
     password: todo
 
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
   flyway:
     enabled: true
     locations: classpath:db/migration
-    baseline-on-migrate: false
+    baseline-on-migrate: false   # dev/POC: tắt để khỏi skip V1
 
 logging:
   level:
-    org.flywaydb: info
+    org.flywaydb: debug
