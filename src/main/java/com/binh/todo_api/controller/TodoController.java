@@ -59,6 +59,11 @@ public class TodoController {
         if( title != null &&!title.isBlank() && title.length() > 100){
             return ResponseEntity.status(400).body(new ApiError(Instant.now(), 400, "Title Too Long",  "/api/todos" , Map.of("title", "Title must be at most 100 characters long")));
         }
+        if(minPriority == null || maxPriority == null)
+        {
+            List<TodoEntity> todos = service.findAll();
+            return ResponseEntity.ok(todos);
+        }
         if(minPriority > maxPriority){
             throw new IllegalArgumentException("minPriority must be less than or equal to maxPriority");
         }

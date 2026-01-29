@@ -21,6 +21,14 @@ public class TodoEntity {
     protected TodoEntity() {
     }
 
+    public TodoEntity(long id, String title, boolean completed, String description, int priority) {
+        this.id = id;
+        this.title = title;
+        this.completed = completed;
+        this.description = description;
+        this.priority = priority;
+    }
+
     public TodoEntity(String title, boolean completed, String description, int priority) {
 
         this.title = title;
@@ -30,7 +38,11 @@ public class TodoEntity {
     }
 
     public TodoEntity with (String title, boolean completed, String description, int priority){
-        return new TodoEntity(title, completed, description, priority);
+        this.title = title;
+        this.completed = completed;
+        this.description = description;
+        this.priority = priority;
+        return this;
     }
 
     public long getId() {

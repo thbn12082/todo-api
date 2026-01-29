@@ -14,6 +14,13 @@ public class TodoCreateRequest {
     @Max(value = 5, message = "Priority must be at most 5")
     private int priority;
 
+    public TodoCreateRequest(String title, boolean completed, String description, int priority) {
+        this.title = title;
+        this.completed = completed;
+        this.description = description;
+        this.priority = priority;
+    }
+
     public String getTitle() {
         return title;
     }

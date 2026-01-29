@@ -89,9 +89,5 @@ public class TodoService {
                 .and(TodoSpecifications.hasCompleted(completed)).and(TodoSpecifications.priorityRange(minPriority, maxPriority)).and(TodoSpecifications.startWithTitle(prefix));
         return todoRepository.findAll(spec, pageable);
     }
-
-
-
-
 }
 
