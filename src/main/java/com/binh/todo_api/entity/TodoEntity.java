@@ -18,7 +18,7 @@ public class TodoEntity {
     @Column(nullable = false)
     private int priority;
 
-    protected TodoEntity() {
+    public TodoEntity() {
     }
 
     public TodoEntity(long id, String title, boolean completed, String description, int priority) {
