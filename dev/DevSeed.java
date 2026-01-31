@@ -15,7 +15,7 @@ public class DevSeed {
     ApplicationRunner seedTodos(TodoJpaRepository repo) {
         return args -> {
             if (repo.count() > 0) return;
-
+//
             repo.save(new TodoEntity("Learn Flyway", false, "V1 migration + history table", 2));
             repo.save(new TodoEntity("Add profile config", true, "dev/prod split", 3));
             repo.save(new TodoEntity("Test pagination", false, "Need many rows later", 1));
