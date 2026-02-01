@@ -1,4 +1,4 @@
-package com.binh.todo_api.it;
+package com.binh.todo_api.service;
 
 import com.binh.todo_api.domain.Todo;
 import com.binh.todo_api.dto.TodoCreateRequest;

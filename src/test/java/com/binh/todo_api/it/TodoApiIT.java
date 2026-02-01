@@ -17,11 +17,11 @@ import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-// chỉ nên để cái này trong intergration test thôi, unit test không nên dùng
+// chỉ nên để cái này trong integration test thôi, unit test không nên dùng
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
-public class TodoApiITTest extends ITBase {
+public class TodoApiIT extends ITBase {
 
     @Autowired
     private MockMvc mvc;
