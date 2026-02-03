@@ -1,21 +1,26 @@
 package com.binh.todo_api.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import org.jspecify.annotations.Nullable;
 
+@Schema(description = "Todo Entity representing a task item")
 @Entity
 @Table(name = "todos")
 public class TodoEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    @Schema(description = "Title of the todo item", example = "Buy groceries")
     @Column(nullable = false, length =  100)
     private String title;
     @Column(nullable = false)
     private boolean completed;
     @Column(length = 200)
+    @Schema(description = "Detailed description of the todo item", example = "Buy milk, eggs, and bread from the supermarket")
     private String description;
     @Column(nullable = false)
+    @Schema(description = "Priority level of the todo item", example = "1")
     private int priority;
 
     public TodoEntity() {

@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   workflow_dispatch:
@@ -20,11 +20,12 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - run: mvn -B -ntp test
+      - name: Run Unit Tests
+        run: mvn -B -ntp test
 
   integration:
     runs-on: ubuntu-latest
-    needs: unit
+    needs: unit # Đảm bảo UT chạy xong và xanh thì mới chạy IT
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -32,4 +33,14 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - run: mvn -B -ntp verify
+
+      # Dùng failsafe:integration để chỉ chạy các file *IT.java nếu bạn đã chạy test ở job trước
+      - name: Run Integration Tests
+        run: mvn -B -ntp verify -DskipUnitTests
+
+      - name: Upload JaCoCo report
+        if: always() # Luôn upload report kể cả khi test fail để còn biết fail ở đâu
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/ # Thêm dấu / để lấy toàn bộ folder

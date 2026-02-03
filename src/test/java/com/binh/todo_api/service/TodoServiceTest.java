@@ -4,6 +4,7 @@ import com.binh.todo_api.domain.Todo;
 import com.binh.todo_api.dto.TodoCreateRequest;
 import com.binh.todo_api.entity.TodoEntity;
 import com.binh.todo_api.error.NotFoundException;
+import com.binh.todo_api.repository.AuditLogsRepository;
 import com.binh.todo_api.repository.TodoJpaRepository;
 import com.binh.todo_api.service.TodoService;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,8 @@ import static org.mockito.Mockito.*;
 
 public class TodoServiceTest {
     TodoJpaRepository repo = mock(TodoJpaRepository.class);
-    TodoService service = new TodoService(repo);
+    AuditLogsRepository auditLogsRepo = mock(AuditLogsRepository.class);
+    TodoService service = new TodoService(repo, auditLogsRepo);
 
     @Test
     void create_shouldSavedEntity(){

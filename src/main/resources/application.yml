@@ -4,11 +4,26 @@ spring:
     username: todo
     password: todo
 
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
   flyway:
     enabled: true
     locations: classpath:db/migration
-    baseline-on-migrate: false
+    # dev hay reset DB => cho clean
+    clean-disabled: false
+    # nếu DB lỡ “không rỗng” mà chưa có history, baseline version 0 để V1 vẫn chạy
+    baseline-on-migrate: true
+    baseline-version: 0
 
 logging:
   level:
     org.flywaydb: info
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%thread] %logger{36} - [rid=%X{requestId}] %msg%n"
+
+springdoc:
+  swagger-ui:
+    path: /sw

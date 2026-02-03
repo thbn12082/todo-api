@@ -35,13 +35,13 @@ public class TodoController {
 
     @PostMapping
     public ResponseEntity<Object> create (@Valid @RequestBody TodoCreateRequest request){
-
         boolean completed = request.isCompleted();
         if(completed == true && request.getTitle().length() < 5){
             return ResponseEntity.badRequest().body(new ApiError(Instant.now(), 400, "Title Too Short",  "/api/todos" , Map.of("title", "Title must be at least 5 characters long if completed is true")));
         }
-       TodoEntity todo =  service.createTodo(request);
+       TodoEntity todo =  service.createTodoWithAudit(toEntity(request));
         return ResponseEntity.created(URI.create("/todos/" + todo.getId())).body(todo);
+
     }
 
     @GetMapping
@@ -121,6 +121,10 @@ public class TodoController {
     public TodoResponse toResponse(TodoEntity todo){
         return new TodoResponse(String.valueOf(todo.getId()), todo.getTitle(), todo.isCompleted(), todo.getDescription(), todo.getPriority());
     }
+
+    public TodoEntity toEntity(TodoCreateRequest request){
+        return new TodoEntity(request.getTitle(), request.isCompleted(), request.getDescription(), request.getPriority());
+    }
     public Sort parseSort(String sort){
         String[] words = sort.split(";");
         Sort finalSort = Sort.by(Sort.Order.desc("id"));
@@ -137,4 +141,5 @@ public class TodoController {
         return finalSort;
 
     }
+
 }
