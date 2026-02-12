@@ -19,6 +19,9 @@ public class TodoSpecifications {
 
     // lọc theo trạng thái hoàn thành
     public static Specification<TodoEntity> hasCompleted(Boolean completed){
+        if(completed == null){
+            return (root, query, cb) -> cb.conjunction();
+        }
         return (root, query, cb) -> cb.equal(root.get("completed"), completed);
     }
 

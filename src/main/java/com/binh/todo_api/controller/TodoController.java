@@ -4,9 +4,11 @@ import com.binh.todo_api.domain.Todo;
 import com.binh.todo_api.dto.*;
 import com.binh.todo_api.entity.TodoEntity;
 import com.binh.todo_api.error.ApiError;
+import com.binh.todo_api.http.ETags;
 import com.binh.todo_api.service.TodoService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +17,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.JsonNode;
 
 import java.net.URI;
 import java.time.Instant;
@@ -27,21 +30,34 @@ public class TodoController {
 
 
     private final TodoService service;
-    public TodoController(TodoService service){
+
+    public TodoController(TodoService service) {
         this.service = service;
     }
 
     private final Set<String> ALLOWED_SORT = Set.of("id", "title", "completed", "priority");
 
     @PostMapping
-    public ResponseEntity<Object> create (@Valid @RequestBody TodoCreateRequest request){
+    public ResponseEntity<Object> create(@Valid @RequestBody TodoCreateRequest request) {
         boolean completed = request.isCompleted();
-        if(completed == true && request.getTitle().length() < 5){
-            return ResponseEntity.badRequest().body(new ApiError(Instant.now(), 400, "Title Too Short",  "/api/todos" , Map.of("title", "Title must be at least 5 characters long if completed is true")));
+        if (completed == true && request.getTitle().length() < 5) {
+            return ResponseEntity.badRequest().body(new ApiError(Instant.now(), 400, "Title Too Short", "/api/todos", Map.of("title", "Title must be at least 5 characters long if completed is true")));
         }
-       TodoEntity todo =  service.createTodoWithAudit(toEntity(request));
+        TodoEntity todo = service.createTodoWithAudit(toEntity(request));
         return ResponseEntity.created(URI.create("/todos/" + todo.getId())).body(todo);
 
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TodoResponse> getById(@PathVariable Long id,@RequestHeader (value = "If-None-Match", required = false) String ifNoneMatch) {
+        TodoEntity todo = service.findById(id);
+        String eTags = ETags.todo(id, todo.getVersion());
+
+        if(ETags.matches(ifNoneMatch, eTags)){
+            return ResponseEntity.status(304).eTag(eTags).build();
+        }
+
+        return ResponseEntity.ok().eTag(eTags).body(toResponse(todo));
     }
 
     @GetMapping
@@ -53,93 +69,74 @@ public class TodoController {
                                        @RequestParam(required = false) Integer minPriority,
                                        @RequestParam(required = false) Integer maxPriority,
                                        @RequestParam(required = false) String prefix) {
-        if(size > 100){
+        if (size > 100) {
             throw new IllegalArgumentException("size must be at most 100");
         }
-        if( title != null &&!title.isBlank() && title.length() > 100){
-            return ResponseEntity.status(400).body(new ApiError(Instant.now(), 400, "Title Too Long",  "/api/todos" , Map.of("title", "Title must be at most 100 characters long")));
+        if (title != null && !title.isBlank() && title.length() > 100) {
+            return ResponseEntity.status(400).body(new ApiError(Instant.now(), 400, "Title Too Long", "/api/todos", Map.of("title", "Title must be at most 100 characters long")));
         }
-        if(minPriority == null || maxPriority == null)
-        {
-            List<TodoEntity> todos = service.findAll();
-            return ResponseEntity.ok(todos);
+        if (minPriority == null || maxPriority == null) {
+            Sort springSort = parseSort(sort);
+            Pageable pageable = PageRequest.of(page, size, springSort);
+            Page<TodoEntity> result = service.list(completed, title, minPriority, maxPriority, prefix, pageable);
+            var todoResponses = result.getContent().stream().map(this::toResponse).toList();
+            return ResponseEntity.ok(new TodoPageResponse<>(todoResponses, result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages()));
         }
-        if(minPriority > maxPriority){
+        if (minPriority > maxPriority) {
             throw new IllegalArgumentException("minPriority must be less than or equal to maxPriority");
         }
         Sort springSort = parseSort(sort);
         Pageable pageable = PageRequest.of(page, size, springSort);
-        Page<TodoEntity> result = service.list(completed, title, minPriority, maxPriority, prefix,  pageable);
+        Page<TodoEntity> result = service.list(completed, title, minPriority, maxPriority, prefix, pageable);
         var todoResponses = result.getContent().stream().map(this::toResponse).toList();
         return ResponseEntity.ok(new TodoPageResponse<>(todoResponses, result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages()));
     }
+        @DeleteMapping
+        public ResponseEntity<Void> deleteAll () {
+            service.deleteAll();
+            return ResponseEntity.noContent().build();
+        }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<TodoResponse> getById(@PathVariable("id") long id){
-        TodoEntity todo = service.findById(id);
-        TodoResponse response = new TodoResponse(
-                String.valueOf(todo.getId()),
-                todo.getTitle(),
-                todo.isCompleted(),
-                todo.getDescription(),
-                todo.getPriority());
-        return ResponseEntity.ok(response);
-    }
-    @GetMapping("/health")
-    public Map<String, String> health(){
-        return Map.of("status", "OK");
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteById(@PathVariable Long id){
-        service.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<TodoResponse> update(@PathVariable long id,@Valid @RequestBody TodoUpdateRequest request){
-        this.service.updatePutTodo(id, request);
-        TodoResponse res = new TodoResponse(String.valueOf(id), request.getTitle(), request.isCompleted(), request.getDescription(), request.getPriority());
-        return ResponseEntity.ok(res);
-    }
+        @PutMapping("/{id}")
+        public ResponseEntity<TodoResponse> update ( @PathVariable Long id,@Valid  @RequestBody TodoUpdateRequest request){
+            TodoEntity updated = service.update(id, request);
+            return ResponseEntity.ok(toResponse(updated));
+        }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<TodoResponse> updatePatch(@PathVariable long id, @Valid @RequestBody TodoPatchRequest request){
-        TodoEntity todo = this.service.updatePatch(id, request);
-        TodoResponse res = new TodoResponse(String.valueOf(id), todo.getTitle(), todo.isCompleted(), todo.getDescription(), todo.getPriority());
-        return ResponseEntity.ok(res);
-
-    }
-
-    @DeleteMapping
-    public ResponseEntity<Void> deleteAll(){
-        service.deleteAll();
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<TodoResponse> patch(
+            @PathVariable long id,
+            @RequestHeader(value = "If-Match", required = false) String ifMatch,
+            @RequestBody JsonNode body
+    ) throws BadRequestException {
+        TodoEntity updated = service.patch(id, body, ifMatch);
+        String etag = ETags.todo(updated.getId(), updated.getVersion());
+        return ResponseEntity.ok().eTag(etag).body(TodoResponse.fromEntity(updated));
     }
 
 
-    public TodoResponse toResponse(TodoEntity todo){
-        return new TodoResponse(String.valueOf(todo.getId()), todo.getTitle(), todo.isCompleted(), todo.getDescription(), todo.getPriority());
-    }
-
-    public TodoEntity toEntity(TodoCreateRequest request){
-        return new TodoEntity(request.getTitle(), request.isCompleted(), request.getDescription(), request.getPriority());
-    }
-    public Sort parseSort(String sort){
-        String[] words = sort.split(";");
-        Sort finalSort = Sort.by(Sort.Order.desc("id"));
-        for(String word: words ){
-            String[] parts = word.split(",");
-            String field = parts[0].trim();
-            String direction = parts[1].trim();
-            if(!ALLOWED_SORT.contains(field.toLowerCase())){
-                throw new IllegalArgumentException("Invalid sort field: " + field);
-            }
-            Sort.Order order = direction.equalsIgnoreCase("desc") ? Sort.Order.desc(field) : Sort.Order.asc(field);
-            finalSort =  Sort.by(order);
+        public TodoResponse toResponse (TodoEntity todo){
+            return new TodoResponse(String.valueOf(todo.getId()), todo.getTitle(), todo.isCompleted(), todo.getDescription(), todo.getPriority());
         }
-        return finalSort;
+
+        public TodoEntity toEntity (TodoCreateRequest request){
+            return new TodoEntity(request.getTitle(), request.isCompleted(), request.getDescription(), request.getPriority());
+        }
+        public Sort parseSort (String sort){
+            String[] words = sort.split(";");
+            Sort finalSort = Sort.by(Sort.Order.desc("id"));
+            for (String word : words) {
+                String[] parts = word.split(",");
+                String field = parts[0].trim();
+                String direction = parts[1].trim();
+                if (!ALLOWED_SORT.contains(field.toLowerCase())) {
+                    throw new IllegalArgumentException("Invalid sort field: " + field);
+                }
+                Sort.Order order = direction.equalsIgnoreCase("desc") ? Sort.Order.desc(field) : Sort.Order.asc(field);
+                finalSort = Sort.by(order);
+            }
+            return finalSort;
+
+        }
 
     }
-
-}

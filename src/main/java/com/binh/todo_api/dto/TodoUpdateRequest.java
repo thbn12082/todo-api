@@ -13,9 +13,21 @@ public class TodoUpdateRequest {
     @Min(value = 1, message = "Priority must be at least 1")
     @Max(value = 5, message = "Priority must be at most 5")
     private int priority;
+@NotNull Long version;
+
+
+
 
     public String getTitle() {
         return title;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public void setTitle(String title) {

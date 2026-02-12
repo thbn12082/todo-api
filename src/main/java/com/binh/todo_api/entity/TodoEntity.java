@@ -1,3 +1,4 @@
+
 package com.binh.todo_api.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,6 +23,14 @@ public class TodoEntity {
     @Column(nullable = false)
     @Schema(description = "Priority level of the todo item", example = "1")
     private int priority;
+
+
+    @Version
+    private Long version;
+
+    public Long getVersion() {
+        return version;
+    }
 
     public TodoEntity() {
     }
